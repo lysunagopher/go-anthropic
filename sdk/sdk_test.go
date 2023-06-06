@@ -37,10 +37,16 @@ func TestNewAnthropic(t *testing.T) {
 	if art.Error(err) {
 		art.Nil(anth)
 	}
+	// Override root.
+	anth, err = sdk.NewAnthropic(mock.NewHTTPClient(), "", "http://127.0.0.1")
+	if art.NoError(err) {
+		art.NotNil(anth)
+	}
 }
 
 func TestAnthropic_DoPrompt(t *testing.T) {
 	art := assert.New(t)
+	// Common case.
 	response := []byte(`{
 		"completion":" The sky appears blue to our eyes due to the way the atmosphere interacts with sunlight.",
 		"stop_reason":"stop_sequence"
@@ -52,32 +58,78 @@ func TestAnthropic_DoPrompt(t *testing.T) {
 			art.NotEmpty(*completion)
 		}
 	}
-}
-
-func TestAnthropic_Do(t *testing.T) {
-	art := assert.New(t)
-	response := []byte(`{
-		"completion":" The sky appears blue to our eyes due to the way the atmosphere interacts with sunlight.",
-		"stop_reason":"stop_sequence"
-	}`)
-	client.RespondWith(response, http.StatusOK, nil)
-	completion, err := anthropic.Do(sdk.Request{
-		Prompt:            anthropic.FormatPrompt("Why is the sky blue?"),
-		Model:             sdk.ModelClaude__V1,
-		MaxTokensToSample: 255,
-	})
+	// Override model.
+	completion, err = anthropic.Answer("Why is the sky blue?", 255, sdk.ModelClaude__V1_0__Instant)
 	if art.NoError(err) {
 		if art.NotNil(completion) {
 			art.NotEmpty(*completion)
 		}
 	}
-	completion, err = anthropic.Do(sdk.Request{
-		Prompt:            "Why is the sky blue?",
-		Model:             sdk.ModelClaude__V1,
-		MaxTokensToSample: 255,
-	})
-	if art.Error(err) {
-		art.ErrorIs(err, sdk.ErrInvalidPromptFormat)
+}
+
+func TestAnthropic_Do(t *testing.T) {
+	art := assert.New(t)
+	type test struct {
+		response []byte
+		status   int
+		prompt   string
+		model    sdk.Model
+		tokens   uint32
+		expected error
+	}
+	tests := []test{
+		// Common case.
+		{
+			response: []byte(`{
+				"completion":" The sky appears blue to our eyes due to the way the atmosphere interacts with sunlight.",
+				"stop_reason":"stop_sequence"
+			}`),
+			status:   http.StatusOK,
+			prompt:   anthropic.FormatPrompt("Why is the sky blue?"),
+			model:    sdk.ModelClaude__V1,
+			tokens:   255,
+			expected: nil,
+		},
+		// Internal anthropic error.
+		{
+			response: []byte(`{
+				"type": "invalid_request_error",
+				"message":"field required"
+			}`),
+			status:   http.StatusBadRequest,
+			prompt:   anthropic.FormatPrompt("Why is the sky blue?"),
+			model:    sdk.ModelClaude__V1,
+			tokens:   0,
+			expected: sdk.ErrInternalAnthropic,
+		},
+		// Invalid prompt format.
+		{
+			response: []byte(`{}`),
+			status:   0,
+			prompt:   "Why is the sky blue?",
+			model:    sdk.ModelClaude__V1,
+			tokens:   255,
+			expected: sdk.ErrInvalidPromptFormat,
+		},
+	}
+
+	for _, tt := range tests {
+		client.RespondWith(tt.response, tt.status, nil)
+		resp, err := anthropic.Do(sdk.Request{
+			Prompt:            tt.prompt,
+			Model:             tt.model,
+			MaxTokensToSample: tt.tokens,
+		})
+		if tt.expected != nil {
+			if art.Error(err) {
+				art.ErrorContains(err, tt.expected.Error())
+				art.Nil(resp)
+			}
+		} else {
+			if art.NoError(err) {
+				art.NotNil(resp)
+			}
+		}
 	}
 }
 
