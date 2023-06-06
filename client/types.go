@@ -1,7 +1,9 @@
 package client
 
 import (
+	"errors"
 	"net/http"
+	"regexp"
 )
 
 type (
@@ -97,4 +99,14 @@ const (
 	StopReasonStopSequence StopReason = "stop_sequence"
 	// StopReasonMaxTokens "max_tokens": we exceeded max_tokens_to_sample or the model's maximum.
 	StopReasonMaxTokens StopReason = "stop_sequence"
+)
+
+var (
+	// ErrInvalidPromptFormat indicates that provided prompt doesn't follow required format.
+	ErrInvalidPromptFormat = errors.New("invalid prompt: prompts have to be of following format: `\n\nHuman: ${prompt}\n\nAssistant:`")
+)
+
+var (
+	// promptRegexp is used in prompt validation.
+	promptRegexp = regexp.MustCompile(`\n{2}Human: (.|\n)*\n{2}Assistant:`)
 )
