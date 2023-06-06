@@ -77,13 +77,6 @@ type (
 )
 
 const (
-	// defaultModel is used during automated request generation, if one is not explicitly provided.
-	defaultModel = ModelClaude__V1
-	// apiRoot is the root of the anthropic api.
-	apiRoot = "https://api.anthropic.com/v1/complete"
-)
-
-const (
 	// ModelClaude__V1 "claude-v1": Our largest model, ideal for a wide range of more complex tasks.
 	ModelClaude__V1 Model = "claude-v1"
 	// ModelClaude__V1__100k "claude-v1-100k": An enhanced version of claude-v1 with a 100,000 token (roughly 75,000 word) context window. Ideal for summarizing, analyzing, and querying long documents and conversations for nuanced understanding of complex topics and relationships across very long spans of text.
@@ -128,6 +121,10 @@ var (
 )
 
 var (
+	// defaultModel is used during automated request generation, if one is not explicitly provided.
+	defaultModel = ModelClaude__V1
+	// defaultAPIRoot is the root of the anthropic api.
+	defaultAPIRoot = "https://api.anthropic.com"
 	// promptRegexp is used in prompt validation.
 	promptRegexp = regexp.MustCompile(`\n{2}Human: (.|\n)*\n{2}Assistant:`)
 	// promptFormat is a format string for naked prompts.

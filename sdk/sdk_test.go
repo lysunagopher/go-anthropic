@@ -62,7 +62,7 @@ func TestAnthropic_Do(t *testing.T) {
 	}`)
 	client.RespondWith(response, http.StatusOK, nil)
 	completion, err := anthropic.Do(sdk.Request{
-		Prompt:            "Why is the sky blue?",
+		Prompt:            anthropic.FormatPrompt("Why is the sky blue?"),
 		Model:             sdk.ModelClaude__V1,
 		MaxTokensToSample: 255,
 	})
@@ -70,6 +70,14 @@ func TestAnthropic_Do(t *testing.T) {
 		if art.NotNil(completion) {
 			art.NotEmpty(*completion)
 		}
+	}
+	completion, err = anthropic.Do(sdk.Request{
+		Prompt:            "Why is the sky blue?",
+		Model:             sdk.ModelClaude__V1,
+		MaxTokensToSample: 255,
+	})
+	if art.Error(err) {
+		art.ErrorIs(err, sdk.ErrInvalidPromptFormat)
 	}
 }
 
