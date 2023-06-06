@@ -1,11 +1,11 @@
 package sdk
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/google/go-querystring/query"
 	"github.com/pkg/errors"
 )
 
@@ -17,21 +17,24 @@ type Anthropic struct {
 
 // NewAnthropic instantiates an Anthropic object with provided parameters.
 func NewAnthropic(client HTTPClient, apiKey string) (*Anthropic, error) {
+	if client == nil {
+		return nil, ErrNilResource
+	}
 	return &Anthropic{
 		client: client,
 		apiKey: apiKey,
 	}, nil
 }
 
-// DoPrompt is a wrapper for Do, which uses default parameters for most fields.
+// Answer is a wrapper for Do, which uses default parameters for most fields.
 // It is possible to pass in an override model, if none is provided, DefaultModel is used.
-func (a *Anthropic) DoPrompt(prompt string, maxTokens uint32, overrideModel ...Model) (*string, error) {
+func (a *Anthropic) Answer(question string, maxTokens uint32, overrideModel ...Model) (*string, error) {
 	model := defaultModel
 	if len(overrideModel) != 0 {
 		model = overrideModel[0]
 	}
 	response, err := a.Do(Request{
-		Prompt:            prompt,
+		Prompt:            a.FormatPrompt(question),
 		Model:             model,
 		MaxTokensToSample: maxTokens,
 	})
@@ -42,12 +45,16 @@ func (a *Anthropic) DoPrompt(prompt string, maxTokens uint32, overrideModel ...M
 }
 
 // Do performs a request to the anthropic api. This is a blocking operation.
-func (a *Anthropic) Do(request Request) (*Response, error) {
-	values, err := query.Values(request)
+// if response doesn't indicate success, return it as error instead.
+func (a *Anthropic) Do(request Request) (*SuccessResponse, error) {
+	if err := a.ValidatePrompt(request.Prompt); err != nil {
+		return nil, err
+	}
+	j, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%v?%v", apiRoot, values.Encode()), nil)
+	req, err := http.NewRequest(http.MethodPost, apiRoot, bytes.NewReader(j))
 	if err != nil {
 		return nil, err
 	}
@@ -64,12 +71,12 @@ func (a *Anthropic) Do(request Request) (*Response, error) {
 		if err = json.NewDecoder(res.Body).Decode(&r); err != nil {
 			return nil, err
 		}
-		return nil, errors.Wrap(ErrInternalAnthropic, fmt.Sprintf(
+		return nil, errors.Wrap(fmt.Errorf(
 			"code: %v, type: %v, message: %v",
 			res.StatusCode, r.Error.Type, r.Error.Message,
-		))
+		), ErrInternalAnthropic.Error())
 	}
-	var response Response
+	var response SuccessResponse
 	if err = json.NewDecoder(res.Body).Decode(&response); err != nil {
 		return nil, err
 	}
@@ -83,4 +90,9 @@ func (a *Anthropic) ValidatePrompt(prompt string) error {
 		return ErrInvalidPromptFormat
 	}
 	return nil
+}
+
+// FormatPrompt wraps front into required human-assistant format.
+func (a *Anthropic) FormatPrompt(prompt string) string {
+	return fmt.Sprintf(promptFormat, prompt)
 }

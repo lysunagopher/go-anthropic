@@ -17,30 +17,30 @@ type (
 	// Request wraps all the request parameters (required and optional).
 	Request struct {
 		// Prompt you want Claude to complete.
-		Prompt string `url:"prompt"`
+		Prompt string `json:"prompt"`
 		// Model represents a unique claude's version control identifier.
-		Model Model `url:"model"`
+		Model Model `json:"model"`
 		// MaxTokensToSample is a maximum number of tokens to generate before stopping.
-		MaxTokensToSample uint32 `url:"max_tokens_to_sample"`
+		MaxTokensToSample uint32 `json:"max_tokens_to_sample"`
 		// StopSequences may include additional strings that will cause the model
 		// to stop generating. By default, models stop on "\n\nHuman:".
-		StopSequences []string `url:"stop_sequences,omitempty"`
+		StopSequences []string `json:"stop_sequences,omitempty"`
 		// Stream indicates whether to incrementally stream the response using SSE.
-		Stream *bool `url:"stream,omitempty"`
+		Stream *bool `json:"stream,omitempty"`
 		// Temperature is the amount of randomness injected into the response. Ranges from 0 to 1. Use temp closer
 		// to 0 for analytical / multiple choice, and temp closer to 1 for creative and generative tasks.
-		Temperature *float64 `url:"temperature,omitempty"`
+		Temperature *float64 `json:"temperature,omitempty"`
 		// TopK signals to only sample from the top K options for each subsequent token. Used to remove "long tail"
 		// low probability responses. Defaults to -1, which disables it.
 		// See: https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277.
-		TopK *int `url:"top_k,omitempty"`
+		TopK *int `json:"top_k,omitempty"`
 		// TopP to do nucleus sampling, in which to compute the cumulative distribution over all the options for each
 		// subsequent token in decreasing probability order and cut it off once it reaches a particular probability
 		// specified by TopP. Defaults to -1, which disables it. Note that you should either alter Temperature
 		// or TopP, but not both.
-		TopP *float64 `url:"top_p,omitempty"`
+		TopP *float64 `json:"top_p,omitempty"`
 		// Metadata is an object describing metadata about the request.
-		Metadata RequestMetadata `url:"metadata,omitempty"`
+		Metadata RequestMetadata `json:"metadata,omitempty"`
 	}
 
 	// RequestMetadata is an object describing metadata about the request
@@ -48,11 +48,11 @@ type (
 		// UserID is an uuid, hash value, or other external identifier for the user who is associated with the request.
 		// Anthropic may use this id to help detect abuse. Do not include any identifying information such as name,
 		// email address, or phone number.
-		UserID string `url:"user_id,omitempty"`
+		UserID string `json:"user_id,omitempty"`
 	}
 
-	// Response wraps all the successful response fields.
-	Response struct {
+	// SuccessResponse wraps all the successful response fields.
+	SuccessResponse struct {
 		// Completion is the resulting completion up to and excluding the stop sequences.
 		Completion string `json:"completion"`
 		// StopReason is the reason sampling stopped.
@@ -122,10 +122,14 @@ var (
 	// ErrInvalidPromptFormat indicates that provided prompt doesn't follow required format.
 	ErrInvalidPromptFormat = errors.New("invalid prompt: prompts have to be of following format: `\n\nHuman: ${prompt}\n\nAssistant:`")
 	// ErrInternalAnthropic indicates that api request failed.
-	ErrInternalAnthropic = errors.New("request failed")
+	ErrInternalAnthropic = errors.New("network request failed")
+	// ErrNilResource indicates that a required nil resource was passed into constructor.
+	ErrNilResource = errors.New("one or more of the provided construction resources are nil")
 )
 
 var (
 	// promptRegexp is used in prompt validation.
 	promptRegexp = regexp.MustCompile(`\n{2}Human: (.|\n)*\n{2}Assistant:`)
+	// promptFormat is a format string for naked prompts.
+	promptFormat = "\n\nHuman: %v\n\nAssistant:"
 )
