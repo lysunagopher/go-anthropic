@@ -1,4 +1,4 @@
-package sdk_test
+package sdk
 
 import (
 	"net/http"
@@ -6,20 +6,19 @@ import (
 	"testing"
 
 	"github.com/staropshq/go-anthropic/helpers/mock"
-	"github.com/staropshq/go-anthropic/sdk"
 
 	"github.com/stretchr/testify/assert"
 )
 
 var (
 	client    *mock.HTTPClient
-	anthropic *sdk.Anthropic
+	anthropic *Anthropic
 )
 
 func TestMain(m *testing.M) {
 	client = mock.NewHTTPClient()
 	var err error
-	if anthropic, err = sdk.NewAnthropic(client, ""); err != nil {
+	if anthropic, err = NewAnthropic(client, ""); err != nil {
 		panic(err)
 	}
 	os.Exit(m.Run())
@@ -28,17 +27,17 @@ func TestMain(m *testing.M) {
 func TestNewAnthropic(t *testing.T) {
 	art := assert.New(t)
 	// Common case.
-	anth, err := sdk.NewAnthropic(mock.NewHTTPClient(), "")
+	anth, err := NewAnthropic(mock.NewHTTPClient(), "")
 	if art.NoError(err) {
 		art.NotNil(anth)
 	}
 	// Nil resource.
-	anth, err = sdk.NewAnthropic(nil, "")
+	anth, err = NewAnthropic(nil, "")
 	if art.Error(err) {
 		art.Nil(anth)
 	}
 	// Override root.
-	anth, err = sdk.NewAnthropic(mock.NewHTTPClient(), "", "http://127.0.0.1")
+	anth, err = NewAnthropic(mock.NewHTTPClient(), "", "http://127.0.0.1")
 	if art.NoError(err) {
 		art.NotNil(anth)
 	}
@@ -59,7 +58,7 @@ func TestAnthropic_DoPrompt(t *testing.T) {
 		}
 	}
 	// Override model.
-	completion, err = anthropic.Answer("Why is the sky blue?", 255, sdk.ModelClaude__V1_0__Instant)
+	completion, err = anthropic.Answer("Why is the sky blue?", 255, ModelClaude__V1_0__Instant)
 	if art.NoError(err) {
 		if art.NotNil(completion) {
 			art.NotEmpty(*completion)
@@ -73,7 +72,7 @@ func TestAnthropic_Do(t *testing.T) {
 		response []byte
 		status   int
 		prompt   string
-		model    sdk.Model
+		model    Model
 		tokens   uint32
 		expected error
 	}
@@ -85,8 +84,8 @@ func TestAnthropic_Do(t *testing.T) {
 				"stop_reason":"stop_sequence"
 			}`),
 			status:   http.StatusOK,
-			prompt:   anthropic.FormatPrompt("Why is the sky blue?"),
-			model:    sdk.ModelClaude__V1,
+			prompt:   anthropic.formatPrompt("Why is the sky blue?"),
+			model:    ModelClaude__V1,
 			tokens:   255,
 			expected: nil,
 		},
@@ -97,25 +96,25 @@ func TestAnthropic_Do(t *testing.T) {
 				"message":"field required"
 			}`),
 			status:   http.StatusBadRequest,
-			prompt:   anthropic.FormatPrompt("Why is the sky blue?"),
-			model:    sdk.ModelClaude__V1,
+			prompt:   anthropic.formatPrompt("Why is the sky blue?"),
+			model:    ModelClaude__V1,
 			tokens:   0,
-			expected: sdk.ErrInternalAnthropic,
+			expected: ErrInternalAnthropic,
 		},
 		// Invalid prompt format.
 		{
 			response: []byte(`{}`),
 			status:   0,
 			prompt:   "Why is the sky blue?",
-			model:    sdk.ModelClaude__V1,
+			model:    ModelClaude__V1,
 			tokens:   255,
-			expected: sdk.ErrInvalidPromptFormat,
+			expected: ErrInvalidPromptFormat,
 		},
 	}
 
 	for _, tt := range tests {
 		client.RespondWith(tt.response, tt.status, nil)
-		resp, err := anthropic.Do(sdk.Request{
+		resp, err := anthropic.Do(Request{
 			Prompt:            tt.prompt,
 			Model:             tt.model,
 			MaxTokensToSample: tt.tokens,
@@ -158,17 +157,17 @@ func TestAnthropic_ValidatePrompt(t *testing.T) {
 		{
 			// Non formatted message.
 			in:  "abc123",
-			out: sdk.ErrInvalidPromptFormat,
+			out: ErrInvalidPromptFormat,
 		},
 		{
 			// Empty prompt.
 			in:  "",
-			out: sdk.ErrInvalidPromptFormat,
+			out: ErrInvalidPromptFormat,
 		},
 	}
 
 	for _, tt := range tests {
-		out := anthropic.ValidatePrompt(tt.in)
+		out := anthropic.validatePrompt(tt.in)
 		art.Equal(tt.out, out)
 	}
 }

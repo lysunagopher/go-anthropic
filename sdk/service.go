@@ -41,7 +41,7 @@ func (a *Anthropic) Answer(question string, maxTokens uint32, overrideModel ...M
 		model = overrideModel[0]
 	}
 	response, err := a.Do(Request{
-		Prompt:            a.FormatPrompt(question),
+		Prompt:            a.formatPrompt(question),
 		Model:             model,
 		MaxTokensToSample: maxTokens,
 	})
@@ -54,7 +54,7 @@ func (a *Anthropic) Answer(question string, maxTokens uint32, overrideModel ...M
 // Do performs a request to the anthropic api. This is a blocking operation.
 // if response doesn't indicate success, return it as error instead.
 func (a *Anthropic) Do(request Request) (*SuccessResponse, error) {
-	if err := a.ValidatePrompt(request.Prompt); err != nil {
+	if err := a.validatePrompt(request.Prompt); err != nil {
 		return nil, err
 	}
 	j, err := json.Marshal(request)
@@ -91,15 +91,15 @@ func (a *Anthropic) Do(request Request) (*SuccessResponse, error) {
 	return &response, nil
 }
 
-// ValidatePrompt check for prompt format and returns an error on validation failure.
-func (a *Anthropic) ValidatePrompt(prompt string) error {
+// validatePrompt check for prompt format and returns an error on validation failure.
+func (_ *Anthropic) validatePrompt(prompt string) error {
 	if !promptRegexp.MatchString(prompt) {
 		return ErrInvalidPromptFormat
 	}
 	return nil
 }
 
-// FormatPrompt wraps front into required human-assistant format.
-func (a *Anthropic) FormatPrompt(prompt string) string {
+// formatPrompt wraps front into required human-assistant format.
+func (_ *Anthropic) formatPrompt(prompt string) string {
 	return fmt.Sprintf(promptFormat, prompt)
 }

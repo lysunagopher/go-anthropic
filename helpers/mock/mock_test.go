@@ -1,18 +1,16 @@
-package mock_test
+package mock
 
 import (
 	"io/ioutil"
 	"net/http"
 	"testing"
 
-	"github.com/staropshq/go-anthropic/helpers/mock"
-
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHTTPClient(t *testing.T) {
 	art := assert.New(t)
-	client := mock.NewHTTPClient()
+	client := NewHTTPClient()
 	client.RespondWith([]byte("Hello, World!"), http.StatusOK, nil)
 	response, err := client.Do(nil)
 	defer response.Body.Close()
