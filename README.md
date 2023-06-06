@@ -32,5 +32,5 @@ completion, err := anthropic.Do(sdk.Request{
 if err != nil {
     panic(err)
 }
-fmt.Println(*completion)
+fmt.Println(*completion.Completion)
 ```

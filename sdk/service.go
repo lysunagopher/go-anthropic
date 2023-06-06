@@ -91,7 +91,7 @@ func (a *Anthropic) Do(request Request) (*SuccessResponse, error) {
 	return &response, nil
 }
 
-// validatePrompt check for prompt format and returns an error on validation failure.
+// validatePrompt checks for prompt format and returns an error on validation failure.
 func (_ *Anthropic) validatePrompt(prompt string) error {
 	if !promptRegexp.MatchString(prompt) {
 		return ErrInvalidPromptFormat
