@@ -1,10 +1,14 @@
-package client
+package sdk
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestAnthropic_DoPrompt(t *testing.T) {
+
+}
 
 func TestAnthropic_Do(t *testing.T) {
 

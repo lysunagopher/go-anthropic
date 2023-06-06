@@ -1,9 +1,10 @@
-package client
+package sdk
 
 import (
-	"errors"
 	"net/http"
 	"regexp"
+
+	"github.com/pkg/errors"
 )
 
 type (
@@ -16,38 +17,30 @@ type (
 	// Request wraps all the request parameters (required and optional).
 	Request struct {
 		// Prompt you want Claude to complete.
-		Prompt string `json:"prompt"`
+		Prompt string `url:"prompt"`
 		// Model represents a unique claude's version control identifier.
-		Model Model `json:"model"`
+		Model Model `url:"model"`
 		// MaxTokensToSample is a maximum number of tokens to generate before stopping.
-		MaxTokensToSample int `json:"max_tokens_to_sample"`
+		MaxTokensToSample uint32 `url:"max_tokens_to_sample"`
 		// StopSequences may include additional strings that will cause the model
 		// to stop generating. By default, models stop on "\n\nHuman:".
-		StopSequences []string `json:"stop_sequences,omitempty"`
+		StopSequences []string `url:"stop_sequences,omitempty"`
 		// Stream indicates whether to incrementally stream the response using SSE.
-		Stream *bool `json:"stream,omitempty"`
+		Stream *bool `url:"stream,omitempty"`
 		// Temperature is the amount of randomness injected into the response. Ranges from 0 to 1. Use temp closer
 		// to 0 for analytical / multiple choice, and temp closer to 1 for creative and generative tasks.
-		Temperature *float64 `json:"temperature,omitempty"`
+		Temperature *float64 `url:"temperature,omitempty"`
 		// TopK signals to only sample from the top K options for each subsequent token. Used to remove "long tail"
 		// low probability responses. Defaults to -1, which disables it.
 		// See: https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277.
-		TopK *int `json:"top_k,omitempty"`
+		TopK *int `url:"top_k,omitempty"`
 		// TopP to do nucleus sampling, in which to compute the cumulative distribution over all the options for each
 		// subsequent token in decreasing probability order and cut it off once it reaches a particular probability
 		// specified by TopP. Defaults to -1, which disables it. Note that you should either alter Temperature
 		// or TopP, but not both.
-		TopP *float64 `json:"top_p,omitempty"`
+		TopP *float64 `url:"top_p,omitempty"`
 		// Metadata is an object describing metadata about the request.
-		Metadata RequestMetadata `json:"metadata,omitempty"`
-	}
-
-	// Response wraps all the response fields.
-	Response struct {
-		// Completion is the resulting completion up to and excluding the stop sequences.
-		Completion string `json:"completion"`
-		// StopReason is the reason sampling stopped.
-		StopReason StopReason `json:"stop_reason"`
+		Metadata RequestMetadata `url:"metadata,omitempty"`
 	}
 
 	// RequestMetadata is an object describing metadata about the request
@@ -55,7 +48,24 @@ type (
 		// UserID is an uuid, hash value, or other external identifier for the user who is associated with the request.
 		// Anthropic may use this id to help detect abuse. Do not include any identifying information such as name,
 		// email address, or phone number.
-		UserID string `json:"user_id,omitempty"`
+		UserID string `url:"user_id,omitempty"`
+	}
+
+	// Response wraps all the successful response fields.
+	Response struct {
+		// Completion is the resulting completion up to and excluding the stop sequences.
+		Completion string `json:"completion"`
+		// StopReason is the reason sampling stopped.
+		StopReason StopReason `json:"stop_reason"`
+	}
+
+	// ErrorResponse wraps all the error response fields.
+	ErrorResponse struct {
+		// Error is a wrapper for error type and message.
+		Error struct {
+			Type    string `json:"type"`
+			Message string `json:"message"`
+		} `json:"error"`
 	}
 
 	// Model represents a unique claude's version control identifier.
@@ -64,6 +74,13 @@ type (
 
 	// StopReason represents the reason sampling stopped. Always one of "stop_sequence" and "max_tokens".
 	StopReason string
+)
+
+const (
+	// defaultModel is used during automated request generation, if one is not explicitly provided.
+	defaultModel = ModelClaude__V1
+	// apiRoot is the root of the anthropic api.
+	apiRoot = "https://api.anthropic.com/v1/complete"
 )
 
 const (
@@ -104,6 +121,8 @@ const (
 var (
 	// ErrInvalidPromptFormat indicates that provided prompt doesn't follow required format.
 	ErrInvalidPromptFormat = errors.New("invalid prompt: prompts have to be of following format: `\n\nHuman: ${prompt}\n\nAssistant:`")
+	// ErrInternalAnthropic indicates that api request failed.
+	ErrInternalAnthropic = errors.New("request failed")
 )
 
 var (
