@@ -10,6 +10,7 @@ type (
 		// Do resolves the request. This is a blocking operation.
 		Do(req *http.Request) (*http.Response, error)
 	}
+
 	// Request wraps all the request parameters (required and optional).
 	Request struct {
 		// Prompt you want Claude to complete.
@@ -38,6 +39,7 @@ type (
 		// Metadata is an object describing metadata about the request.
 		Metadata RequestMetadata `json:"metadata,omitempty"`
 	}
+
 	// Response wraps all the response fields.
 	Response struct {
 		// Completion is the resulting completion up to and excluding the stop sequences.
@@ -45,6 +47,7 @@ type (
 		// StopReason is the reason sampling stopped.
 		StopReason StopReason `json:"stop_reason"`
 	}
+
 	// RequestMetadata is an object describing metadata about the request
 	RequestMetadata struct {
 		// UserID is an uuid, hash value, or other external identifier for the user who is associated with the request.
@@ -52,9 +55,11 @@ type (
 		// email address, or phone number.
 		UserID string `json:"user_id,omitempty"`
 	}
+
 	// Model represents a unique claude's version control identifier.
 	// e.g.: "claude-v1", "claude-v1-100k", "claude-instant-v1", ...
 	Model string
+
 	// StopReason represents the reason sampling stopped. Always one of "stop_sequence" and "max_tokens".
 	StopReason string
 )
