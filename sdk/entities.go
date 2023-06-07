@@ -108,7 +108,7 @@ const (
 	// stop_sequences parameter, or a stop sequence built into the model
 	StopReasonStopSequence StopReason = "stop_sequence"
 	// StopReasonMaxTokens "max_tokens": we exceeded max_tokens_to_sample or the model's maximum.
-	StopReasonMaxTokens StopReason = "stop_sequence"
+	StopReasonMaxTokens StopReason = "max_tokens"
 )
 
 var (

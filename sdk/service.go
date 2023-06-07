@@ -34,7 +34,7 @@ func NewAnthropic(client HTTPClient, apiKey string, apiRoot ...string) (*Anthrop
 }
 
 // Answer is a wrapper for Do, which uses default parameters for most fields.
-// It is possible to pass in an override model. If none is provided, DefaultModel is used.
+// It is possible to pass in an override model. If none is provided, defaultModel is used.
 func (a *Anthropic) Answer(question string, maxTokens uint32, overrideModel ...Model) (*string, error) {
 	model := defaultModel
 	if len(overrideModel) != 0 {
