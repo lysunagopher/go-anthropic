@@ -5,7 +5,8 @@ This is a golang SDK for anthropic claude API.
 To start working with `go-anthropic`, instantiate the `Anthropic` object with `sdk.NewAnthropic()`:
 ```go
 key := "your-api-key"
-anthropic, err := sdk.NewAnthropic(http.DefaultClient, key)
+endpoint := sdk.DefaultEndpoint
+anthropic, err := sdk.NewAnthropic(http.DefaultClient, endpoint, key)
 if err != nil {
     panic(err)
 }
@@ -14,7 +15,7 @@ if err != nil {
 * `Answer` allows user to ask questions while staying oblivious to the API structure, filling all the inferrable fields
 and constructing/parsing the request/response automatically.
 ```go
-completion, err := anthropic.Answer("Why is the sky blue?":, 255)
+completion, err := anthropic.Answer("Why is the sky blue?", 255)
 if err != nil {
     panic(err)
 }
@@ -32,5 +33,5 @@ completion, err := anthropic.Do(sdk.Request{
 if err != nil {
     panic(err)
 }
-fmt.Println(*completion.Completion)
+fmt.Println(completion.Completion)
 ```

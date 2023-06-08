@@ -11,38 +11,30 @@ import (
 
 // Anthropic is an object used by end user to interact with anthropic api.
 type Anthropic struct {
-	client  HTTPClient
-	apiRoot string
-	apiKey  string
+	client   HTTPClient
+	endpoint string
+	apiKey   string
 }
 
 // NewAnthropic instantiates an Anthropic object with provided parameters.
 // It is possible to pass in an override api root. If none is provided, apiRoot is used.
-func NewAnthropic(client HTTPClient, apiKey string, apiRoot ...string) (*Anthropic, error) {
+func NewAnthropic(client HTTPClient, endpoint string, apiKey string) (*Anthropic, error) {
 	if client == nil {
 		return nil, ErrNilResource
 	}
-	root := defaultAPIRoot
-	if len(apiRoot) != 0 {
-		root = apiRoot[0]
-	}
 	return &Anthropic{
-		client:  client,
-		apiRoot: root,
-		apiKey:  apiKey,
+		client:   client,
+		endpoint: endpoint,
+		apiKey:   apiKey,
 	}, nil
 }
 
 // Answer is a wrapper for Do, which uses default parameters for most fields.
 // It is possible to pass in an override model. If none is provided, defaultModel is used.
-func (a *Anthropic) Answer(question string, maxTokens uint32, overrideModel ...Model) (*string, error) {
-	model := defaultModel
-	if len(overrideModel) != 0 {
-		model = overrideModel[0]
-	}
+func (a *Anthropic) Answer(question string, maxTokens uint32) (*string, error) {
 	response, err := a.Do(Request{
 		Prompt:            a.formatPrompt(question),
-		Model:             model,
+		Model:             defaultModel,
 		MaxTokensToSample: maxTokens,
 	})
 	if err != nil {
@@ -61,7 +53,7 @@ func (a *Anthropic) Do(request Request) (*SuccessResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequest(http.MethodPost, a.apiRoot+"/v1/complete", bytes.NewReader(j))
+	req, err := http.NewRequest(http.MethodPost, a.endpoint, bytes.NewReader(j))
 	if err != nil {
 		return nil, err
 	}
