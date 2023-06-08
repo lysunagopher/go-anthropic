@@ -121,10 +121,10 @@ var (
 )
 
 var (
+	// DefaultEndpoint is the root of the anthropic api.
+	DefaultEndpoint = "https://api.anthropic.com/v1/complete"
 	// defaultModel is used during automated request generation, if one is not explicitly provided.
 	defaultModel = ModelClaude__V1
-	// defaultAPIRoot is the root of the anthropic api.
-	defaultAPIRoot = "https://api.anthropic.com"
 	// promptRegexp is used in prompt validation.
 	promptRegexp = regexp.MustCompile(`\n{2}Human: (.|\n)*\n{2}Assistant:`)
 	// promptFormat is a format string for naked prompts.

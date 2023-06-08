@@ -18,7 +18,7 @@ var (
 func TestMain(m *testing.M) {
 	client = mock.NewHTTPClient()
 	var err error
-	if anthropic, err = NewAnthropic(client, ""); err != nil {
+	if anthropic, err = NewAnthropic(client, "", ""); err != nil {
 		panic(err)
 	}
 	os.Exit(m.Run())
@@ -27,19 +27,14 @@ func TestMain(m *testing.M) {
 func TestNewAnthropic(t *testing.T) {
 	art := assert.New(t)
 	// Common case.
-	anth, err := NewAnthropic(mock.NewHTTPClient(), "")
+	anth, err := NewAnthropic(mock.NewHTTPClient(), "", "")
 	if art.NoError(err) {
 		art.NotNil(anth)
 	}
 	// Nil resource.
-	anth, err = NewAnthropic(nil, "")
+	anth, err = NewAnthropic(nil, "", "")
 	if art.Error(err) {
 		art.Nil(anth)
-	}
-	// Override root.
-	anth, err = NewAnthropic(mock.NewHTTPClient(), "", "http://127.0.0.1")
-	if art.NoError(err) {
-		art.NotNil(anth)
 	}
 }
 
@@ -58,7 +53,7 @@ func TestAnthropic_DoPrompt(t *testing.T) {
 		}
 	}
 	// Override model.
-	completion, err = anthropic.Answer("Why is the sky blue?", 255, ModelClaude__V1_0__Instant)
+	completion, err = anthropic.Answer("Why is the sky blue?", 255)
 	if art.NoError(err) {
 		if art.NotNil(completion) {
 			art.NotEmpty(*completion)
